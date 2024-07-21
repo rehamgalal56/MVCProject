@@ -9,15 +9,20 @@ using System.Threading.Tasks;
 
 namespace MVCProject_DAL.Data
 {
-    internal class ApplicationDbContext :DbContext
+    public class ApplicationDbContext :DbContext
     {
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-          => optionsBuilder.UseSqlServer("Server = .; Database = MVCProject; Trusted_Connection = True");
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
+        {
+
+        }
+        ///protected override void onconfiguring(dbcontextoptionsbuilder optionsbuilder)
+        ///  => optionsbuilder.usesqlserver("server = .; database = mvcproject; trusted_connection = true");
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
         }
         public DbSet<Department> Departments { get; set; }
+        public DbSet<Employee> Employees { get; set; }
     }
 }

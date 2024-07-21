@@ -1,0 +1,53 @@
+﻿
+@model Employee
+
+@inject IUnitOfWork _unitOfWorl
+@{
+    var departments = new SelectList(_unitOfWorl.Repository<Department>().GetAll(), nameof(Department.Id),nameof(Department.Name));
+}
+
+<div class="form-group">
+    <label class="col-form-label" asp-for="Name"></label>
+    <input asp-for="Name" class="form-control" />
+    <span asp-validation-for="Name" class="text-danger"></span>
+</div>
+<div class="form-group">
+    <label class="col-form-label" asp-for="Email"></label>
+    <input asp-for="Email" class="form-control" />
+    <span asp-validation-for="Email" class="text-danger"></span>
+</div>
+<div class="form-group">
+    <label class="col-form-label" asp-for="Address"></label>
+    <input asp-for="Address" class="form-control" />
+    <span asp-validation-for="Address" class="text-danger"></span>
+</div>
+<div class="form-group">
+    <label class="col-form-label" asp-for="Age"></label>
+    <input asp-for="Age" class="form-control" />
+    <span asp-validation-for="Age" class="text-danger"></span>
+</div>
+<div class="form-group">
+    <label class="col-form-label" asp-for="Salary"></label>
+    <input asp-for="Salary" class="form-control" />
+    <span asp-validation-for="Salary" class="text-danger"></span>
+</div>
+
+<div class="form-group">
+    <label class="col-form-label" asp-for="Department"></label>
+    <select  class="form-control" asp-items="@departments"asp-for="DepartmentId">
+        <option>----- Select Department ------</option>
+    </select>
+</div>
+<div class="form-group">
+    <label class="col-form-label" asp-for="Gender"></label>
+    <input asp-for="Gender" class="form-control" />
+    <span asp-validation-for="Gender" class="text-danger"></span>
+</div>
+<div class="form-group form-check">
+    <input asp-for="IsActive" class="form-check-input" />
+    <label class="form-check-label" asp-for="IsActive"></label>
+</div>
+<div class="form-group">
+    <label class="col-form-label" asp-for="HiringDate"></label>
+    <input asp-for="HiringDate" class="form-control" />
+</div>
