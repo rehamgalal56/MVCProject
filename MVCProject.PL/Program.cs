@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -7,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MVCProject.PL.Extensions;
+using MVCProject.PL.Settings;
 using MVCProject_DAL.Data;
 using MVCProject_DAL.Models;
 using System;
@@ -24,11 +26,14 @@ namespace MVCProject.PL
 
 			#region Configure Services
 			webApplicationBuilder.Services.AddControllersWithViews();
+
 			webApplicationBuilder.Services.AddDbContext<ApplicationDbContext>(options =>
 			{
 				options.UseSqlServer(webApplicationBuilder.Configuration.GetConnectionString("DefaultConnection"));
 			});
+
 			webApplicationBuilder.Services.AddApplicationServices();
+
 			webApplicationBuilder.Services.AddIdentity<ApplicationUser, IdentityRole>(Options =>
 			{
 				Options.Password.RequiredUniqueChars = 2;
@@ -57,6 +62,21 @@ namespace MVCProject.PL
 				options.ExpireTimeSpan = TimeSpan.FromDays(5);
 				options.AccessDeniedPath = "/Home/Error";
 
+			});
+
+			webApplicationBuilder.Services.Configure<MailSettings>(webApplicationBuilder.Configuration.GetSection("EmailSettings"));
+			webApplicationBuilder.Services.Configure<TwilioSettings>(webApplicationBuilder.Configuration.GetSection("Twilio"));
+
+			// External Login With Google
+			webApplicationBuilder.Services.AddAuthentication(o =>
+			{
+				o.DefaultAuthenticateScheme = GoogleDefaults.AuthenticationScheme;
+				o.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
+			}).AddGoogle(options =>
+			{
+				IConfiguration GoogleAuthSection = webApplicationBuilder.Configuration.GetSection("Authentication:Google");
+				options.ClientId = GoogleAuthSection["ClientId"];
+				options.ClientSecret = GoogleAuthSection["ClientSecret"];
 			});
 			#endregion
 
