@@ -11,9 +11,8 @@ namespace MVCProject_DAL.Models
     {
         public int Id { get; set; }
 
-        [Required(ErrorMessage = "Name is Required !")]
-        [MaxLength(50, ErrorMessage = "Max Length of Name is 50 Chars")]
-        //[MinLength(5, ErrorMessage = "Min Length of Name is 5 Chars")]
+        [Required]
+        [MaxLength(50)]
         public string Name { get; set; }
     }
 }

@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 
 namespace MVCProject.BLL.Intarfaces
 {
-    public interface IUnitOfWork : IDisposable
+    public interface IUnitOfWork : IAsyncDisposable
     {
         //public IEmployeeRepository EmployeeRepository { get; set; }
         //public IDepartmentRepository DepartmentRepository { get; set; }
         IGerericRepository<T> Repository<T>() where T : ModelBase;
 
-        int Complete();
+        Task<int> Complete();
     }
 }

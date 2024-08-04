@@ -1,38 +1,49 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
 using MVCProject.BLL.Intarfaces;
 using MVCProject.BLL.Repositories;
+using MVCProject.PL.Helpers;
+using MVCProject.PL.ViewModels;
 using MVCProject_DAL.Models;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace MVCProject.PL.Controllers
 {
-    public class EmployeeController : Controller
+	[Authorize]
+	public class EmployeeController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
 
         //private readonly IEmployeeRepository _employeeRepository;
         private readonly IWebHostEnvironment _env;
+        private readonly IMapper _mapper;
 
-        public EmployeeController(IUnitOfWork unitOfWork/*IEmployeeRepository employeeRepository*/, IWebHostEnvironment env)
+        public EmployeeController(IUnitOfWork unitOfWork/*IEmployeeRepository employeeRepository*/
+            , IWebHostEnvironment env
+            ,IMapper mapper)
         {
             _unitOfWork = unitOfWork;
             //_employeeRepository = employeeRepository;
             _env = env;
+            _mapper = mapper;
         }
 
-        public IActionResult Index(string searchInp)
+        public  async Task<IActionResult> Index(string searchInp)
         {
             var employees = Enumerable.Empty<Employee>();
             var employeeRepo = _unitOfWork.Repository<Employee>() as EmployeeRepository;
             if (string.IsNullOrEmpty(searchInp))
-                   employees = employeeRepo.GetAll();
+                   employees =  await employeeRepo.GetAllAsync();
             else
                 employees = employeeRepo.SearchByName(searchInp.ToLower());
-            return View(employees);
+            return View(_mapper.Map<IEnumerable<Employee>, IEnumerable<EmployeeViewModel>>(employees));
         }
         //[HttpGet]
         public IActionResult Create()
@@ -40,51 +51,54 @@ namespace MVCProject.PL.Controllers
             return View();
         }
         [HttpPost]
-        public IActionResult Create(Employee employee)
+        public async Task<IActionResult> Create(EmployeeViewModel employeeVM)
         {
-            if (ModelState.IsValid)
+            if (ModelState.IsValid) 
             {
-                _unitOfWork.Repository<Employee>().Add(employee);
-                var count = _unitOfWork.Complete();
+                employeeVM.ImageName =await DocumentSettings.UploadFile(employeeVM.Image,"Images");
+                _unitOfWork.Repository<Employee>().Add(_mapper.Map<EmployeeViewModel,Employee>(employeeVM));
+                var count =await _unitOfWork.Complete();
                 if (count > 0){
                     TempData["Created"] = "Employee Is Created";
                     return RedirectToAction(nameof(Index));
                 }
             }
-            return View(employee);
+            return View(employeeVM);
         }
 
         //[HttpGet]
-        public IActionResult Details(int? id, string viewName = "Details")
+        public async Task<IActionResult> Details(int? id, string viewName = "Details")
         {
             if (!id.HasValue)
                 return BadRequest();  //400
 
-            var employee = _unitOfWork.Repository<Employee>().Get(id.Value);
+            var employee =await _unitOfWork.Repository<Employee>().GetAsync(id.Value);
 
             if (employee is null)
                 return NotFound();    //404
-
-            return View(viewName, employee);
+            if(viewName.Equals("Delete",StringComparison.OrdinalIgnoreCase))
+                 TempData["ImageName"] = employee.ImageName;
+            return View(viewName, _mapper.Map<Employee, EmployeeViewModel>(employee));
         }
         //[HttpGet]
-        public IActionResult Edit(int? id)
+        public async Task<IActionResult> Edit(int? id)
         {
-            return Details(id, "Edit");
+            return await Details(id, "Edit");
         }
         [HttpPost]
         //[ValidateAntiForgeryToken]
-        public IActionResult Edit([FromRoute] int id, Employee employee)
+        public  async Task<IActionResult> Edit([FromRoute] int id, EmployeeViewModel employeeVM)
         {
-            if (id != employee.Id)
+            if (id != employeeVM.Id)
                 return BadRequest();
 
             if (!ModelState.IsValid)
-                return View(employee);
+                return View(employeeVM);
             try
             {
-                _unitOfWork.Repository<Employee>().Update(employee);
-                _unitOfWork.Complete();
+                employeeVM.ImageName =await DocumentSettings.UploadFile(employeeVM.Image, "Images");
+                _unitOfWork.Repository<Employee>().Update(_mapper.Map<EmployeeViewModel, Employee>(employeeVM));
+                await _unitOfWork.Complete();
                 return RedirectToAction(nameof(Index));
 
             }
@@ -94,23 +108,29 @@ namespace MVCProject.PL.Controllers
                     ModelState.AddModelError(string.Empty, ex.Message);
                 else
                     ModelState.AddModelError(string.Empty, "An Error Has Occurred during Updating the employee ");
-                return View(employee);
+                return View(employeeVM);
             }
         }
         //[HttpGet]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            return Details(id, "Delete");
+            return await Details(id, "Delete");
         }
         [HttpPost]
-        public IActionResult Delete(Employee employee)
+        public async Task<IActionResult> Delete(EmployeeViewModel employeeVM)
         {
             try
             {
-                _unitOfWork.Repository<Employee>().Delete(employee);
-                _unitOfWork.Complete();
-                TempData["Deleted"] = "Employee Is Deleted";
-                return RedirectToAction(nameof(Index));
+                employeeVM.ImageName = TempData["ImageName"] as string;
+                _unitOfWork.Repository<Employee>().Delete(_mapper.Map<EmployeeViewModel, Employee>(employeeVM));
+                var count =await _unitOfWork.Complete();
+                if (count > 0)
+                {
+                    DocumentSettings.DeleteFile(employeeVM.ImageName,"images");
+                    TempData["Deleted"] = "Employee Is Deleted";
+                    return RedirectToAction(nameof(Index));
+                }
+                return View(employeeVM);
 
             }
             catch (Exception ex)
@@ -119,7 +139,7 @@ namespace MVCProject.PL.Controllers
                     ModelState.AddModelError(string.Empty, ex.Message);
                 else
                     ModelState.AddModelError(string.Empty, "An Error Has Occurred during Detele the employee ");
-                return View(employee);
+                return View(employeeVM);
             }
         }
 

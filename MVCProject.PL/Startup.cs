@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,6 +11,7 @@ using MVCProject.BLL.Intarfaces;
 using MVCProject.BLL.Repositories;
 using MVCProject.PL.Extensions;
 using MVCProject_DAL.Data;
+using MVCProject_DAL.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,6 +38,35 @@ namespace MVCProject.PL
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
             });
             services.AddApplicationServices();
+            services.AddIdentity<ApplicationUser, IdentityRole>(Options =>
+            {
+                Options.Password.RequiredUniqueChars = 2;
+                Options.Password.RequireUppercase = true;
+                Options.Password.RequireLowercase = true;
+                Options.Password.RequireUppercase = true;
+                Options.Password.RequireDigit = true;
+                Options.Password.RequireNonAlphanumeric = true;
+                Options.Password.RequiredLength = 5;
+
+                Options.Lockout.AllowedForNewUsers = true;
+                Options.Lockout.MaxFailedAccessAttempts = 5;
+                Options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+
+                Options.User.RequireUniqueEmail = true;
+
+
+
+            })
+                .AddEntityFrameworkStores<ApplicationDbContext>()
+                .AddDefaultTokenProviders();
+
+            services.ConfigureApplicationCookie(options =>
+            {
+                options.LoginPath = "/Account/SignIn";
+                options.ExpireTimeSpan = TimeSpan.FromDays(5);
+                options.AccessDeniedPath = "/Home/Error";
+
+            });
 
         }
 
@@ -57,6 +88,7 @@ namespace MVCProject.PL
 
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>

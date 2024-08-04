@@ -13,7 +13,7 @@ namespace MVCProject.BLL.Repositories
     public class GenericRepository<T>: IGerericRepository<T> where T : ModelBase
     {
         private protected readonly ApplicationDbContext _dbContext;
-        public GenericRepository(ApplicationDbContext dbContext)
+        public  GenericRepository(ApplicationDbContext dbContext)
         {
             _dbContext = dbContext;
         }
@@ -28,7 +28,7 @@ namespace MVCProject.BLL.Repositories
             => _dbContext.Set<T>().Remove(entity);  //_dbContext.Remove(entity);
 
 
-        public T Get(int id)
+        public async Task<T> GetAsync(int id)
         {
             ///var department =_dbContext.Departments.Local.Where(D =>D.Id==id).FirstOrDefault();
             ///if (department == null)
@@ -37,14 +37,14 @@ namespace MVCProject.BLL.Repositories
             if (typeof(T) == typeof(Employee))
                 return _dbContext.Employees.Include(E => E.Department).Where(E => E.Id == id).FirstOrDefault() as T;
             else
-                return _dbContext.Find<T>(id);
+                return await _dbContext.FindAsync<T>(id);
         }
-        public IEnumerable<T> GetAll()
+        public async Task<IEnumerable<T>> GetAllAsync()
         {
             if(typeof(T) == typeof(Employee))
-                return (IEnumerable<T>) _dbContext.Employees.Include(E =>E.Department).AsNoTracking().ToList();
+                return (IEnumerable<T>) await _dbContext.Employees.Include(E =>E.Department).AsNoTracking().ToListAsync();
             else
-                return _dbContext.Set<T>().AsNoTracking().ToList(); 
+                return await _dbContext.Set<T>().AsNoTracking().ToListAsync(); 
         }
 
         public IQueryable<T> SearchByName(string name)

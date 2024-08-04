@@ -1,4 +1,7 @@
-﻿@model Employee
+﻿@model EmployeeViewModel
+<div>
+    <img src="~/files/images/@Model.ImageName" width ="100" class="img-fluid rounded-circle" alt="Employee Image"/>
+</div>
 <div class="form-group">
     <label class="col-form-label" asp-for="Name"></label>
     <input asp-for="Name" class="form-control" readonly />
@@ -23,6 +26,8 @@
     <label class="col-form-label" asp-for="Department"></label>
     <input asp-for="Department.Name" class="form-control" readonly />
 </div>
+
+ <input asp-for="Department.Code" hidden />
 <div class="form-group">
     <label class="col-form-label" asp-for="Gender"></label>
     <input asp-for="Gender" class="form-control" readonly />

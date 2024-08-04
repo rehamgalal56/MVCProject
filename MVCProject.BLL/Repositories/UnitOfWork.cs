@@ -44,14 +44,14 @@ namespace MVCProject.BLL.Repositories
             }
             return _repositories[Key] as IGerericRepository<T>;
         }
-        public int Complete()
+        public async Task<int> Complete()
         {
-            return _dbContext.SaveChanges();
+            return await _dbContext.SaveChangesAsync();
         }
 
-        public void Dispose()
+        public async ValueTask DisposeAsync()
         {
-            _dbContext?.Dispose();
+           await _dbContext.DisposeAsync();
         }
 
        

@@ -9,9 +9,9 @@ namespace MVCProject.BLL.Intarfaces
 {
     public interface IGerericRepository<T> where T : ModelBase
     {
-        IEnumerable<T> GetAll();
+        Task<IEnumerable<T>> GetAllAsync();
         IQueryable<T> SearchByName(string name);
-        T Get(int id);
+        Task<T> GetAsync(int id);
         void Add(T entity);
         void Update(T entity);
         void Delete(T entity);
